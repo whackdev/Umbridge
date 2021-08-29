@@ -1,0 +1,33 @@
+{
+  "name": "umbridge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx nodemon --exec node src/app.js",
+    "lint": "eslint --ext .js ./ --ignore-pattern /node_modules/ --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/builders": "^0.5.0",
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "chalk": "^4.1.2",
+    "cheerio": "^1.0.0-rc.10",
+    "dayjs": "^1.10.6",
+    "discord-api-types": "^0.22.0",
+    "discord.js": "^13.0.1",
+    "dotenv": "^10.0.0",
+    "node-emoji": "^1.10.0",
+    "node-fetch": "^2.6.1",
+    "sequelize": "^6.6.5",
+    "sqlite3": "^4.2.0",
+    "uuid": "^8.3.2",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0"
+  }
+}
