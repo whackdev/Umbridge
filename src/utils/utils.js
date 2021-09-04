@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { Interaction, MessageEmbed } = require('discord.js');
 
 module.exports = {
   /**
@@ -13,10 +14,18 @@ module.exports = {
     )
       .then((response) => response.json())
       .then((data) => {
+        if (!data.success && data['errorCode'] === '939dade') {
+          throw Error('Your D&D Beyond sheet is set to private');
+        }
         return data;
       })
-      .catch((error) => console.error(error));
+      .catch((error) => new Error(error));
   },
+  /**
+   * Pulls needed characteristics from API JSON response
+   * @param {JSON} characterData
+   * @returns {JSON} character
+   */
   parseCharData: async (characterData) => {
     let stats = [
       { id: 1, name: 'Strength', value: '0' },
@@ -56,6 +65,12 @@ module.exports = {
       issues: issues,
     };
   },
+  /**
+   *
+   * @param {Interaction} interaction the discord client interaction
+   * @param {JSON} charData parsed character from `parseCharData`
+   * @returns {MessageEmbed}
+   */
   createApprovalEmbed: async (interaction, charData) => {
     return {
       color: 0x0099ff,
@@ -69,18 +84,20 @@ module.exports = {
         url: charData.avatar,
       },
       fields: [
-        { name: 'Base Stats', value: `${charData.name}'s base stat values:`},
+        { name: 'Base Stats', value: `${charData.name}'s base stat values:` },
         { name: 'Strength', value: charData.stats[0].value, inline: true },
         { name: 'Dexterity', value: charData.stats[1].value, inline: true },
         { name: 'Constitution', value: charData.stats[2].value, inline: true },
         { name: 'Intelligence', value: charData.stats[3].value, inline: true },
         { name: 'Wisdom', value: charData.stats[4].value, inline: true },
-        { name: 'Charisma', value: charData.stats[5].value, inline: true }
+        { name: 'Charisma', value: charData.stats[5].value, inline: true },
       ],
       timestamp: new Date(),
       footer: {
         text: `Submission ID: ${charData.id}`,
       },
-    }
-  }
+    };
+  },
+  standardArray: [8, 10, 12, 13, 14, 15],
+  pointBuyCosts: { 15: 9, 14: 7, 13: 5, 12: 4, 11: 3, 10: 2, 9: 1, 8: 0 },
 };
