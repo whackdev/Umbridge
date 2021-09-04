@@ -5,44 +5,38 @@ const { Sequelize, DataTypes, where } = require('sequelize');
 const { Client, Intents, MessageEmbed, Message, Collection } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { token } = require('../config.json')
+const { token, clientId, guildId } = require('../config.json')
 
 const submission = require('./models/submission');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 client.commands = new Collection()
 
-const commands = [];
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
-
-const clientId = '867194855717732382';
-const guildId = '853453367938252800';
 
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
 	// set a new item in the Collection
 	// with the key as the command name and the value as the exported module
 	client.commands.set(command.data.name, command);
-	console.info(`Created: ${command.data.name}`)
-	commands.push(command.data.toJSON());
 }
 
-const rest = new REST({ version: '9' }).setToken(token);
+// const rest = new REST({ version: '9' }).setToken(token);
 
-(async () => {
-	try {
-		console.log('Started refreshing application (/) commands.');
+// (async () => {
+// 	try {
+// 		console.log('Started refreshing application (/) commands.');
 
-		await rest.put(
-			Routes.applicationGuildCommands(clientId, guildId),
-			{ body: commands },
-		);
+// 		await rest.put(
+// 			Routes.applicationGuildCommands(clientId, guildId),
+// 			{ body: commands },
+// 		);
 
-		console.log('Successfully reloaded application (/) commands.');
-	} catch (error) {
-		console.error(error);
-	}
-})();
+// 		console.log('Successfully reloaded application (/) commands.');
+// 	} catch (error) {
+// 		console.error(error);
+// 	}
+// })();
 
 const sequelize = new Sequelize('database', 'username', 'password', {
 	host: 'localhost',
@@ -54,7 +48,7 @@ const sequelize = new Sequelize('database', 'username', 'password', {
 
 const Submissions = sequelize.define('submissions', {
 	id: {
-		type: DataTypes.UUIDV4,
+		type: DataTypes.INTEGER,
 		primaryKey: true,
 	},
 	user_id: {

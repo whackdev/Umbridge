@@ -14,22 +14,7 @@ module.exports = {
         .setName('link')
         .setDescription('URL to D&D Beyond character sheet.')
         .setRequired(true)
-    )
-    .addStringOption(option => {
-      option
-        .setName('method')
-        .setDescription('The method used to create your character (roll / standard array / point buy).')
-        .setRequired(true)
-        .addChoice('sa', 'Standard Array')
-        .addChoice('pb', 'Point Buy')
-        .addChoice('dr', 'Manual/Dice Roll')
-    })
-    .addStringOption(option => {
-      option
-        .setName('roll-link')
-        .setDescription('Discord link to stat roll used to create your character.')
-        .setRequired(false)
-    }),
+    ),
   async execute(interaction) {
     try {
 
