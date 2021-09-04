@@ -1,20 +1,35 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Dayjs } = require('dayjs');
 const { MessageEmbed, Message } = require('discord.js');
-const { fetchData, parseCharData, createApprovalEmbed } = require('../utils/utils.js');
+const { fetchData, parseCharData, createApprovalEmbed, standardArray, pointBuyCosts } = require('../utils/utils.js');
 const { val } = require('cheerio/lib/api/attributes');
 const { default: fetch } = require('node-fetch');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('submit')
-    .setDescription('Accept a `link` and notifies staff for review.')
+    .setDescription('Accept a `link` and creation `method` and notifies staff for review.')
     .addStringOption((option) =>
       option
         .setName('link')
-        .setDescription('URL to D&D Beyond character sheet')
+        .setDescription('URL to D&D Beyond character sheet.')
         .setRequired(true)
-    ),
+    )
+    .addStringOption(option => {
+      option
+        .setName('method')
+        .setDescription('The method used to create your character (roll / standard array / point buy).')
+        .setRequired(true)
+        .addChoice('sa', 'Standard Array')
+        .addChoice('pb', 'Point Buy')
+        .addChoice('dr', 'Manual/Dice Roll')
+    })
+    .addStringOption(option => {
+      option
+        .setName('roll-link')
+        .setDescription('Discord link to stat roll used to create your character.')
+        .setRequired(false)
+    }),
   async execute(interaction) {
     try {
 
@@ -25,7 +40,16 @@ module.exports = {
       const rawData = await fetchData(interaction.options.getString('link'));
 			const charData = await parseCharData(rawData);
 
+      // Review via against method
+      if (interaction.options.getString('method') === 'pb') {
+        let costTotal = 0;
 
+        for (const stat in charData['stats']) {
+          costTotal += pointBuyCosts[stat]
+        }
+        const pbConformity = costTotal <= 27;
+        if (!pbConformity) charData.issues.push(`These stats do not meet Point Buy guidelines. Points spent: ${costTotal}`);
+      }
       // const sub = await Submissions.create({
       // 	id: charData.id,
       // 	user_id: interaction.member.user.id,
