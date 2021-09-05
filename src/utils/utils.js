@@ -92,7 +92,7 @@ module.exports = {
     };
   },
   /**
-   *
+   * Takes parsed character data and formats embaed for `aprovalChannel`
    * @param {Interaction} interaction the discord client interaction
    * @param {sampleChar} charData parsed character from `parseCharData`
    * @returns {MessageEmbed}
@@ -144,11 +144,11 @@ module.exports = {
   },
   standardArray: ['8', '10', '12', '13', '14', '15'],
   pointBuyCosts: {
-    '20': 14,
-    '19': 13,
-    '18': 12,
-    '17': 11,
-    '16': 10,
+    '20': 25,
+    '19': 21,
+    '18': 17,
+    '17': 14,
+    '16': 11,
     '15': 9,
     '14': 7,
     '13': 5,
