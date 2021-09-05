@@ -101,6 +101,8 @@ module.exports = {
     const author = interaction.guild.members.cache.get(
       interaction.user.id
     ).displayName;
+    const baseMethod = interaction.options.getString('method');
+    const generationmethod = baseMethod === 'pb' ? 'used **Point Buy**' : baseMethod === 'roll' ? '**rolled**' : 'used **Standard Array**';
     return {
       color: 0x0099ff,
       title: charData.name,
@@ -110,7 +112,7 @@ module.exports = {
       },
       description: `Hey ${interaction.guild.roles.cache.get(
         '872299571374608434'
-      )}!\n${author} would like to join ${
+      )}!\n\n${author} would like to join ${
         interaction.guild.name
       }.\nA new character sheet for ${charData.name} has been submitted.`,
       thumbnail: {
@@ -119,7 +121,7 @@ module.exports = {
       fields: [
         { name: 'Race', value: charData.race },
         { name: 'Class', value: charData.class },
-        { name: 'Base Stats', value: `${charData.name}'s base stat values:` },
+        { name: 'Base Stats', value: `${charData.name} ${generationmethod} for their stats.\nBase stat values:` },
         { name: 'Strength', value: charData.stats[0].value, inline: true },
         { name: 'Dexterity', value: charData.stats[1].value, inline: true },
         { name: 'Constitution', value: charData.stats[2].value, inline: true },
@@ -127,11 +129,11 @@ module.exports = {
         { name: 'Wisdom', value: charData.stats[4].value, inline: true },
         { name: 'Charisma', value: charData.stats[5].value, inline: true },
         {
-          name: 'Feats',
+          name: `Feats${charData.feats === 'N/A' ? '' : ` (${charData.feats.split('\n').length})` }`,
           value: charData.feats,
         },
         {
-          name: 'Issues',
+          name: `Issues${charData.issues === 'N/A' ? '': ` (${charData.issues.split('\n').length})` }`,
           value: charData.issues,
           inline: true,
         },
