@@ -21,23 +21,6 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
-// const rest = new REST({ version: '9' }).setToken(token);
-
-// (async () => {
-// 	try {
-// 		console.log('Started refreshing application (/) commands.');
-
-// 		await rest.put(
-// 			Routes.applicationGuildCommands(clientId, guildId),
-// 			{ body: commands },
-// 		);
-
-// 		console.log('Successfully reloaded application (/) commands.');
-// 	} catch (error) {
-// 		console.error(error);
-// 	}
-// })();
-
 const sequelize = new Sequelize('database', 'username', 'password', {
 	host: 'localhost',
 	dialect: 'sqlite',
@@ -94,10 +77,11 @@ client.on('interactionCreate', async interaction => {
 	if (!client.commands.has(commandName)) return;
 
 	try {
+		await interaction.deferReply()
 		await client.commands.get(commandName).execute(interaction);
 	} catch (error) {
 		
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		await interaction.editReply({ content: error.message, ephemeral: true });
 	}
 
 	// else if (command === 'approve') {
@@ -129,5 +113,7 @@ client.on('interactionCreate', async interaction => {
 	// 	return interaction.reply(`List of Submissions: ${Submissionstring}`);
 	// }
 });
-
+process.on('unhandledRejection', error => {
+	console.error('Unhandled promise rejection:', error);
+});
 client.login(token);

@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { Interaction, MessageEmbed } = require('discord.js');
+const { SampleChar } = require('../models/beyondResponse.js');
 
 module.exports = {
   /**
@@ -27,6 +28,8 @@ module.exports = {
    * @returns {JSON} character
    */
   parseCharData: async (characterData) => {
+    const char = characterData.data;
+    const race = `${char.race.fullName}${char.race.isSubRace ? ` (${char.race.baseRaceName})` : ''}`
     let stats = [
       { id: 1, name: 'Strength', value: '0' },
       { id: 2, name: 'Dexterity', value: '0' },
@@ -42,7 +45,7 @@ module.exports = {
     for (let index = 0; index < stats.length; index++) {
       const baseValue = characterData.data.stats[index].value;
       const overrideValue =
-        characterData.data.overrideStats[index].value || null;
+        char.overrideStats[index].value || null;
 
       if (overrideValue)
         [
@@ -54,15 +57,35 @@ module.exports = {
       stats[index].value = baseValue.toString();
     }
 
+    let classData = [];
+    for (let i = 0; i <char.classes.length; i++) {
+      const { definition, subclassDefinition, level } =
+        char.classes[i];
+
+      classData.push(
+        `${definition.name}${
+          subclassDefinition ? ` (${subclassDefinition.name}): ` : ': '
+        }${level}`
+      );
+    }
+    if (char.overrideHitPoints) {
+      issues.push(`Hit points have been overriden to ${char.overrideHitPoints}`)
+    }
+    let featData = []
+    for (let idx=0; idx<char.feats.length; idx++) {
+        featData.push(char.feats[idx].definition.name)
+    }
     return {
-      id: characterData.data.id,
-      name: characterData.data.name,
-      url: characterData.data.readonlyUrl,
+      id: char.id,
+      name: char.name,
+      url: char.readonlyUrl,
       stats: stats,
       total: statTotal,
-      avatar: characterData.data.avatarUrl,
-      race: characterData.data.race.fullName,
-      issues: issues,
+      avatar: char.avatarUrl,
+      race: race,
+      class: classData.join('\n'),
+      feats: char.feats.length > 0 ? featData.join('\n') : 'N/A',
+      issues: issues.length>0 ? issues.join('\n') : 'N/A',
     };
   },
   /**
@@ -72,18 +95,21 @@ module.exports = {
    * @returns {MessageEmbed}
    */
   createApprovalEmbed: async (interaction, charData) => {
+    const author = interaction.guild.members.cache.get(interaction.user.id).displayName
     return {
       color: 0x0099ff,
       title: charData.name,
       url: charData.url,
       author: {
-        name: interaction.member.user.tag,
+        name: author
       },
-      description: `A new character has been submitted by ${interaction.member.user.tag} would like to join ${interaction.guild.name}`,
+      description: `${author} would like to join ${interaction.guild.name}.\nA new character sheet for ${charData.name} has been submitted.`,
       thumbnail: {
         url: charData.avatar,
       },
       fields: [
+        { name: 'Race', value: charData.race },
+        { name: 'Class', value: charData.class },
         { name: 'Base Stats', value: `${charData.name}'s base stat values:` },
         { name: 'Strength', value: charData.stats[0].value, inline: true },
         { name: 'Dexterity', value: charData.stats[1].value, inline: true },
@@ -91,6 +117,14 @@ module.exports = {
         { name: 'Intelligence', value: charData.stats[3].value, inline: true },
         { name: 'Wisdom', value: charData.stats[4].value, inline: true },
         { name: 'Charisma', value: charData.stats[5].value, inline: true },
+        {
+          name: 'Feats',
+          value: charData.feats,
+        },
+        {
+          name: 'Issues',
+          value: charData.issues,
+        },
       ],
       timestamp: new Date(),
       footer: {

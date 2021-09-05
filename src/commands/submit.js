@@ -26,15 +26,15 @@ module.exports = {
 			const charData = await parseCharData(rawData);
 
       // Review via against method
-      if (interaction.options.getString('method') === 'pb') {
-        let costTotal = 0;
+      // if (interaction.options.getString('method') === 'pb') {
+      //   let costTotal = 0;
 
-        for (const stat in charData['stats']) {
-          costTotal += pointBuyCosts[stat]
-        }
-        const pbConformity = costTotal <= 27;
-        if (!pbConformity) charData.issues.push(`These stats do not meet Point Buy guidelines. Points spent: ${costTotal}`);
-      }
+      //   for (const stat in charData['stats']) {
+      //     costTotal += pointBuyCosts[stat]
+      //   }
+      //   const pbConformity = costTotal <= 27;
+      //   if (!pbConformity) charData.issues.push(`These stats do not meet Point Buy guidelines. Points spent: ${costTotal}`);
+      // }
       // const sub = await Submissions.create({
       // 	id: charData.id,
       // 	user_id: interaction.member.user.id,
@@ -47,14 +47,14 @@ module.exports = {
 
       approvalChannel.send({ embeds: [submissionEmbed] });
 
-      return interaction.reply(
+      return interaction.editReply(
         `Submission ${charData.id} added for ${charData.name} and is pending review.`
       );
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
-        return interaction.reply('That submission already exists.');
+        return interaction.editReply('That submission already exists.');
       }
-      return interaction.reply(error.data);
+      return interaction.editReply(error.stack);
     }
   },
 };
