@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const { Interaction, MessageEmbed } = require('discord.js');
-const { SampleChar } = require('../models/beyondResponse.js');
+const { SampleCharResponse } = require('../models/beyondResponse.js');
+const { sampleChar } = require('../models/sampleChar.js');
 
 module.exports = {
   /**
@@ -24,12 +25,14 @@ module.exports = {
   },
   /**
    * Pulls needed characteristics from API JSON response
-   * @param {JSON} characterData
+   * @param {SampleCharResponse} characterData
    * @returns {JSON} character
    */
   parseCharData: async (characterData) => {
     const char = characterData.data;
-    const race = `${char.race.fullName}${char.race.isSubRace ? ` (${char.race.baseRaceName})` : ''}`
+    const race = `${char.race.fullName}${
+      char.race.isSubRace ? ` (${char.race.baseRaceName})` : ''
+    }`;
     let stats = [
       { id: 1, name: 'Strength', value: '0' },
       { id: 2, name: 'Dexterity', value: '0' },
@@ -44,13 +47,12 @@ module.exports = {
 
     for (let index = 0; index < stats.length; index++) {
       const baseValue = characterData.data.stats[index].value;
-      const overrideValue =
-        char.overrideStats[index].value || null;
+      const overrideValue = char.overrideStats[index].value || null;
 
       if (overrideValue)
         [
           issues.push(
-            `${stats[index].name} has been overridden to ${overrideValue}`
+            `- **${stats[index].name}** has been *overridden* to **${overrideValue}**!`
           ),
         ];
       statTotal += baseValue;
@@ -58,9 +60,8 @@ module.exports = {
     }
 
     let classData = [];
-    for (let i = 0; i <char.classes.length; i++) {
-      const { definition, subclassDefinition, level } =
-        char.classes[i];
+    for (let i = 0; i < char.classes.length; i++) {
+      const { definition, subclassDefinition, level } = char.classes[i];
 
       classData.push(
         `${definition.name}${
@@ -69,11 +70,13 @@ module.exports = {
       );
     }
     if (char.overrideHitPoints) {
-      issues.push(`Hit points have been overriden to ${char.overrideHitPoints}`)
+      issues.push(
+        `- **Hit points** have been *overriden* to **${char.overrideHitPoints}**!`
+      );
     }
-    let featData = []
-    for (let idx=0; idx<char.feats.length; idx++) {
-        featData.push(char.feats[idx].definition.name)
+    let featData = [];
+    for (let idx = 0; idx < char.feats.length; idx++) {
+      featData.push(`- ${char.feats[idx].definition.name}`);
     }
     return {
       id: char.id,
@@ -85,32 +88,40 @@ module.exports = {
       race: race,
       class: classData.join('\n'),
       feats: char.feats.length > 0 ? featData.join('\n') : 'N/A',
-      issues: issues.length>0 ? issues.join('\n') : 'N/A',
+      issues: issues.length > 0 ? issues.join('\n') : 'N/A',
     };
   },
   /**
-   *
+   * Takes parsed character data and formats embaed for `aprovalChannel`
    * @param {Interaction} interaction the discord client interaction
-   * @param {JSON} charData parsed character from `parseCharData`
+   * @param {sampleChar} charData parsed character from `parseCharData`
    * @returns {MessageEmbed}
    */
   createApprovalEmbed: async (interaction, charData) => {
-    const author = interaction.guild.members.cache.get(interaction.user.id).displayName
+    const author = interaction.guild.members.cache.get(
+      interaction.user.id
+    ).displayName;
+    const baseMethod = interaction.options.getString('method');
+    const generationmethod = baseMethod === 'pb' ? 'used **Point Buy**' : baseMethod === 'roll' ? '**rolled**' : 'used **Standard Array**';
     return {
       color: 0x0099ff,
       title: charData.name,
       url: charData.url,
       author: {
-        name: author
+        name: author,
       },
-      description: `${author} would like to join ${interaction.guild.name}.\nA new character sheet for ${charData.name} has been submitted.`,
+      description: `Hey ${interaction.guild.roles.cache.get(
+        '872299571374608434'
+      )}!\n\n${author} would like to join ${
+        interaction.guild.name
+      }.\nA new character sheet for ${charData.name} has been submitted.`,
       thumbnail: {
         url: charData.avatar,
       },
       fields: [
         { name: 'Race', value: charData.race },
         { name: 'Class', value: charData.class },
-        { name: 'Base Stats', value: `${charData.name}'s base stat values:` },
+        { name: 'Base Stats', value: `${charData.name} ${generationmethod} for their stats.\nBase stat values:` },
         { name: 'Strength', value: charData.stats[0].value, inline: true },
         { name: 'Dexterity', value: charData.stats[1].value, inline: true },
         { name: 'Constitution', value: charData.stats[2].value, inline: true },
@@ -118,12 +129,13 @@ module.exports = {
         { name: 'Wisdom', value: charData.stats[4].value, inline: true },
         { name: 'Charisma', value: charData.stats[5].value, inline: true },
         {
-          name: 'Feats',
+          name: `Feats${charData.feats === 'N/A' ? '' : ` (${charData.feats.split('\n').length})` }`,
           value: charData.feats,
         },
         {
-          name: 'Issues',
+          name: `Issues${charData.issues === 'N/A' ? '': ` (${charData.issues.split('\n').length})` }`,
           value: charData.issues,
+          inline: true,
         },
       ],
       timestamp: new Date(),
@@ -132,6 +144,20 @@ module.exports = {
       },
     };
   },
-  standardArray: [8, 10, 12, 13, 14, 15],
-  pointBuyCosts: { 15: 9, 14: 7, 13: 5, 12: 4, 11: 3, 10: 2, 9: 1, 8: 0 },
+  standardArray: ['8', '10', '12', '13', '14', '15'],
+  pointBuyCosts: {
+    '20': 25,
+    '19': 21,
+    '18': 17,
+    '17': 14,
+    '16': 11,
+    '15': 9,
+    '14': 7,
+    '13': 5,
+    '12': 4,
+    '11': 3,
+    '10': 2,
+    '9': 1,
+    '8': 0,
+  },
 };
