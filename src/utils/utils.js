@@ -144,6 +144,12 @@ module.exports = {
       },
     };
   },
+  /**
+   * 
+   * @param {String[]} stringArray 
+   * @returns {String[]}
+   */
+  parseIntArray: (stringArray) => stringArray.filter(s => s && !isNaN(s)),
   standardArray: ['8', '10', '12', '13', '14', '15'],
   pointBuyCosts: {
     '20': 25,
