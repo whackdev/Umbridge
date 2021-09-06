@@ -102,7 +102,7 @@ module.exports = {
       interaction.user.id
     ).displayName;
     const baseMethod = interaction.options.getString('method');
-    const generationmethod = baseMethod === 'pb' ? 'used **Point Buy**' : baseMethod === 'roll' ? '**rolled**' : 'used **Standard Array**';
+    const generationmethod = baseMethod === 'pb' ? 'used **__Point Buy__**' : baseMethod === 'roll' ? '**__rolled__**' : 'used **__Standard Array__**';
     return {
       color: 0x0099ff,
       title: charData.name,
@@ -121,7 +121,7 @@ module.exports = {
       fields: [
         { name: 'Race', value: charData.race },
         { name: 'Class', value: charData.class },
-        { name: 'Base Stats', value: `${charData.name} ${generationmethod} for their stats.\nBase stat values:` },
+        { name: 'Base Stats', value: `${author} ${generationmethod} for ${charData.name}'s stats.\nBase stat values:` },
         { name: 'Strength', value: charData.stats[0].value, inline: true },
         { name: 'Dexterity', value: charData.stats[1].value, inline: true },
         { name: 'Constitution', value: charData.stats[2].value, inline: true },
@@ -150,6 +150,11 @@ module.exports = {
    * @returns {String[]}
    */
   parseIntArray: (stringArray) => stringArray.filter(s => s && !isNaN(s)),
+  handleEmbedRolls: async (embed) => {
+    const embedFieldCount = embed.fields.length
+    
+
+  },
   standardArray: ['8', '10', '12', '13', '14', '15'],
   pointBuyCosts: {
     '20': 25,

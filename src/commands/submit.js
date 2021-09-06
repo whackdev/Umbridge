@@ -50,7 +50,7 @@ module.exports = {
   async execute(interaction) {
     try {
       const approvalChannel = interaction.guild.channels.cache.find(
-        (c) => c.name === 'character-approval'
+        (c) => c.name === 'character-submissions'
       );
 
       const rawData = await fetchData(interaction.options.getString('link'));
@@ -73,14 +73,14 @@ module.exports = {
         }
         statConformity = costTotal <= 27;
         if (!statConformity) {
-          charData.issues = `- These stats ***_do not_*** meet **Point Buy** guidelines! Points spent: ${costTotal}.\n${charData.issues}`;
+          charData.issues = `- These stats ***__do not__*** meet **Point Buy** guidelines! Points spent: ${costTotal}.\n${charData.issues}`;
         }
       } else if (method === 'std') {
         statConformity =
           JSON.stringify(charStatsSubmitted) ==
           JSON.stringify(standardArray.sort((a, b) => a - b));
         if (!statConformity) {
-          charData.issues = `- These stats ***_do not_*** meet **Standard Array** guidelines!\n${charData.issues}`;
+          charData.issues = `- These stats ***__do not__*** meet **Standard Array** guidelines!\n${charData.issues}`;
         }
       } else if (method === 'roll') {
         const rollLink = interaction.options.getString('roll-link');
@@ -98,6 +98,7 @@ module.exports = {
           .messages.fetch(linkMessageId);
 
         const messageEmbedRollString = rollMessage.embeds[0].fields[0].value;
+
         const messageRollTotal = messageEmbedRollString
           .split('`')
           .pop()
@@ -118,14 +119,15 @@ module.exports = {
           .map((s) => parseInt(s))
           .reduce((a, b) => a + b)
           .toString();
+        const expected = JSON.stringify(messageStatsArray);
+        const received = JSON.stringify(charStatsSubmitted);
         statConformity =
-          submittedTotal === messageRollTotal &&
-          JSON.stringify(charStatsSubmitted) ==
-            JSON.stringify(messageStatsArray);
+          submittedTotal === messageRollTotal && received == expected;
         if (!statConformity) {
-          charData.issues = `- These stats ***_do not_*** meet **the rolled** guidelines! Total Expected: ${messageRollTotal}, Total Received: ${submittedTotal}\n${charData.issues}`;
+          charData.issues = `- These stats ***__do not__*** meet **the rolled** guidelines!\n- Expected: ${expected} (${messageRollTotal}) Received: ${received}\n${
+            charData.issues === 'N/A' ? '' : `${charData.issues}`
+          }`;
         }
-        // const statsFromRoll = [3, 6, 24, 12, 14, 15].sort((a, b) => a - b);
       }
       // const sub = await Submissions.create({
       // 	id: charData.id,
@@ -138,7 +140,25 @@ module.exports = {
 
       approvalChannel.send({
         embeds: [submissionEmbed],
-        approved_mentions: true,
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                label: 'Approve',
+                style: 3,
+                custom_id: 'approve',
+              },
+              {
+                type: 2,
+                label: 'Reject',
+                style: 4,
+                custom_id: 'reject',
+              },
+            ],
+          },
+        ],
       });
 
       return interaction.editReply(
