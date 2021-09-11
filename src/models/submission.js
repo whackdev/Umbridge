@@ -24,5 +24,5 @@ module.exports = (sequelize, DataTypes) => {
 		approved_by: {
 			type: DataTypes.STRING,
 		},
-	},{ timestamps: true });
+	}, { timestamps: true });
 };

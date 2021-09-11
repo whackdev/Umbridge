@@ -1,16 +1,15 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const { Sequelize, DataTypes, where } = require('sequelize');
-const { Client, Intents, MessageEmbed, Message, Collection } = require('discord.js');
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
-const { token, clientId, guildId } = require('../config.json')
+/* es-lint ignore no-unused-vars */
+const { Sequelize, DataTypes } = require('sequelize');
+const { Client, Intents, Collection } = require('discord.js');
+const { token } = require('../config.json');
 
-const submission = require('./models/submission');
+// const submission = require('./models/submission');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-client.commands = new Collection()
+client.commands = new Collection();
 
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 
@@ -73,14 +72,15 @@ client.on('interactionCreate', async interaction => {
 
 	const { commandName } = interaction;
 
-	
+
 	if (!client.commands.has(commandName)) return;
 
 	try {
-		await interaction.deferReply()
+		await interaction.deferReply();
 		await client.commands.get(commandName).execute(interaction);
-	} catch (error) {
-		
+	}
+	catch (error) {
+
 		await interaction.editReply({ content: error.message, ephemeral: true });
 	}
 
