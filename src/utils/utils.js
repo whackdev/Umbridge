@@ -113,9 +113,7 @@ module.exports = {
       author: {
         name: author,
       },
-      description: `Hey ${interaction.guild.roles.cache.get(
-        '872299571374608434'
-      )}!\n\n${author} would like to join ${
+      description: `${author} would like to join ${
         interaction.guild.name
       }.\nA new character sheet for ${charData.name} has been submitted.`,
       thumbnail: {
