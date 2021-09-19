@@ -146,9 +146,9 @@ module.exports = {
 			const submissionEmbed = await createApprovalEmbed(interaction, charData);
 
 			approvalChannel.send({
-				content: `Hey ${interaction.guild.roles.cache.get(
+				/*content: `Hey ${interaction.guild.roles.cache.get(
 					'872299571374608434'
-				)}!`,
+				)}!`,*/
 				embeds: [submissionEmbed],
 
 				components: [
