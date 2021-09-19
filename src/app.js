@@ -1,119 +1,106 @@
 require('dotenv').config();
 
 const fs = require('fs');
-/* es-lint ignore no-unused-vars */
-const { Sequelize, DataTypes } = require('sequelize');
-const { Client, Intents, Collection } = require('discord.js');
+const { Client, Intents, Collection, MessageActionRow } = require('discord.js');
 const { token } = require('../config.json');
 
 // const submission = require('./models/submission');
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+});
 client.commands = new Collection();
 
-const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs
+  .readdirSync('./src/commands')
+  .filter((file) => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	// set a new item in the Collection
-	// with the key as the command name and the value as the exported module
-	client.commands.set(command.data.name, command);
+  const command = require(`./commands/${file}`);
+  // set a new item in the Collection
+  // with the key as the command name and the value as the exported module
+  client.commands.set(command.data.name, command);
 }
 
-const sequelize = new Sequelize('database', 'username', 'password', {
-	host: 'localhost',
-	dialect: 'sqlite',
-	logging: false,
-	// SQLite only
-	storage: 'database.sqlite',
-});
-
-const Submissions = sequelize.define('submissions', {
-	id: {
-		type: DataTypes.INTEGER,
-		primaryKey: true,
-	},
-	user_id: {
-		type: DataTypes.STRING,
-		allowNull: false,
-	},
-	guild_id: {
-		type: DataTypes.STRING,
-		allowNull: false,
-	},
-	char_name: {
-		type: DataTypes.STRING,
-		allowNull: false,
-	},
-	char_link: {
-		type: DataTypes.STRING,
-		allowNull: false,
-	},
-	approved: {
-		type: DataTypes.BOOLEAN,
-		defaultValue: false,
-		allowNull: false,
-	},
-	approved_by: {
-		type: DataTypes.STRING,
-		defaultValue: null,
-	},
-}, {
-	timestamps: true,
-});
-
 client.once('ready', () => {
-
-	Submissions.sync();
+  console.log('Umbridge is online');
 });
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isButton()) return;
 
-client.on('interactionCreate', async interaction => {
-	if (!interaction.isCommand()) return;
+  const {
+    customId: buttonId,
+    channelId: subChannelId,
+    message: subMessage,
+  } = interaction;
+  const channelCache = interaction.guild.channels.cache;
+  const memberCache = interaction.guild.members.cache;
+  const {
+    author: authorFromEmbed,
+    footer: embedFooterText,
+    url: beyondLink,
+    title: charName,
+  } = subMessage.embeds[0];
+  const author = memberCache.find(
+    (member) => member.displayName === authorFromEmbed.name
+  );
+  const staffMember = memberCache.get(interaction.user.id);
+  const subId = embedFooterText.text.split(' ').pop();
+	
+  if (buttonId === 'approve') {
+    const sheetChannel = channelCache.find(
+      (ch) => ch.name === 'alias-programming'
+    );
+    author.roles.add(interaction.guild.roles.cache.get('873281493814878308'));
+    author.roles.add(interaction.guild.roles.cache.get('867514468099031130'));
+    await sheetChannel.send(
+      `${author} your character has been **approved**, please type \`!beyond ${beyondLink}\``
+    );
+    interaction.reply(
+      `Thanks for your hardwork ${staffMember}, character succesffuly approved.`
+    );
+  } else if (buttonId === 'reject') {
+    interaction.reply({content:'Please enter your rejection rationale', components: []}).then(() => {
+      const filter = (m) => interaction.user.id === m.author.id;
 
-	const { commandName } = interaction;
+      interaction.channel
+        .awaitMessages({ filter, time: 60000, max: 1, errors: ['time'] })
+        .then(async (messages) => {
+          const reasons = await messages.first().content;
 
+          await author.send(
+            `I'm sorry but your character ${charName} (ID: ${subId}) has been rejected.\nDetails: ${reasons}`
+          );
+          interaction.followUp(`Thanks for your hardwork ${staffMember.displayName}, character succesffuly rejected.`);
+        })
+        .catch(() => {
+          interaction.followUp('You did not enter any input!');
+        });
+    });
 
-	if (!client.commands.has(commandName)) return;
-
-	try {
-		await interaction.deferReply();
-		await client.commands.get(commandName).execute(interaction);
-	}
-	catch (error) {
-
-		await interaction.editReply({ content: error.message, ephemeral: true });
-	}
-
-	// else if (command === 'approve') {
-	// 	const sub_id = interaction.options.getString('id');
-
-	// 	// equivalent to: SELECT * FROM Submissions WHERE name = 'tagName' LIMIT 1;
-	// 	const sub = await Submissions.findOne({ where: { id: sub_id }});
-	// 	if (sub) {
-	// 		// equivalent to: UPDATE Submissions SET usage_count = usage_count + 1 WHERE name = 'tagName';
-	// 		await Submissions.update({ approved: true, approved_by: interaction.member.user.tag }, { where: { id: sub_id } });
-
-	// 		return interaction.reply(tag.get('description'));
-	// 	}
-	// 	return interaction.reply(`Could not find tag: ${sub_id}`);
-	// }
-	// else if (command === 'get') {
-	// 	const sub_id = interaction.options.getString('sub_id');
-
-	// 	// equivalent to: SELECT * FROM Submissions WHERE name = 'tagName' LIMIT 1;
-	// 	const sub = await Submissions.findOne({ where: { id: sub_id }});
-	// 	if (sub) {
-	// 		return interaction.reply(`${sub.id} was created by ${sub.user_id} at ${sub.createdAt} and ${sub.approved ? `was approved by ${sub.approved_by}.`: 'is pending approval' }`);
-	// 	}
-	// 	return interaction.reply(`Could not find tag: ${sub_id}`);
-	// }
-	// else if (command === 'list') {
-	// 	const subList = await Submissions.findAll({ where: { user_id: interaction.user.id }});
-	// 	const Submissionstring = subList.map(s => `Submission id: ${s.id} - Character: ${s.char_name}`).join(', ') || 'No Submissions set.';
-	// 	return interaction.reply(`List of Submissions: ${Submissionstring}`);
-	// }
+    author.send(
+      `I'm sorry but your character ${charName} (ID: ${subId}) has been rejected. Details: ${reasons}`
+    );
+    interaction.followUp(
+      `Thanks for your hardwork ${staffMember.displayName}, character succesffuly rejected.`
+    );
+  }
 });
-process.on('unhandledRejection', error => {
-	console.error('Unhandled promise rejection:', error);
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isCommand()) return;
+
+  const { commandName } = interaction;
+
+  if (!client.commands.has(commandName)) return;
+
+  try {
+    await interaction.deferReply();
+    await client.commands.get(commandName).execute(interaction);
+  } catch (error) {
+    await interaction.editReply({ content: error.message, ephemeral: true });
+  }
+});
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled promise rejection:', error);
 });
 client.login(token);
