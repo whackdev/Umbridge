@@ -56,11 +56,13 @@ client.on('interactionCreate', async (interaction) => {
     await sheetChannel.send(
       `${author} your character has been **approved**, please type \`!beyond ${beyondLink}\``
     );
+    await interaction.message.react('✅') // ':white_check_mark:'
+    await interaction.message.edit({ components: [] })
     interaction.reply(
       `Thanks for your hardwork ${staffMember}, character succesffuly approved.`
     );
   } else if (buttonId === 'reject') {
-    interaction.reply({content:'Please enter your rejection rationale', components: []}).then(() => {
+    interaction.reply('Please enter your rejection rationale').then(() => {
       const filter = (m) => interaction.user.id === m.author.id;
 
       interaction.channel
@@ -71,6 +73,8 @@ client.on('interactionCreate', async (interaction) => {
           await author.send(
             `I'm sorry but your character ${charName} (ID: ${subId}) has been rejected.\nDetails: ${reasons}`
           );
+          await interaction.message.react('❌') // '\:x:'
+          await interaction.message.edit({ components: [] })
           interaction.followUp(`Thanks for your hardwork ${staffMember.displayName}, character succesffuly rejected.`);
         })
         .catch(() => {
@@ -100,7 +104,5 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.editReply({ content: error.message, ephemeral: true });
   }
 });
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled promise rejection:', error);
-});
+
 client.login(token);
