@@ -109,7 +109,7 @@ module.exports = {
     return {
       color: 0x0099ff,
       title: charData.name,
-      url: charData.url,
+      url: interaction.options.getString('link'),
       author: {
         name: author,
       },

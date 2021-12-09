@@ -4,7 +4,7 @@ const { Client, Collection, Intents } = require('discord.js');
 const { readdirSync } = require('fs');
 const token = process.env.BOT_TOKEN;
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS] });
 client.commands = new Collection();
 
 const cmdFiles = readdirSync('./src/commands').filter(file => file.endsWith('.js'));

@@ -1,8 +1,6 @@
-require('dotenv').config();
-
 const fs = require('fs');
 const { Client, Intents, Collection, MessageActionRow } = require('discord.js');
-const { token } = require('../config.json');
+const keepAlive = require("./server");
 
 // const submission = require('./models/submission');
 
@@ -49,23 +47,23 @@ client.on('interactionCreate', async (interaction) => {
 	
   if (buttonId === 'approve') {
     const sheetChannel = channelCache.find(
-      (ch) => ch.name === 'alias-programming'
+      (ch) => ch.name === 'character-submission'
     );
     author.roles.add(interaction.guild.roles.cache.get('873281493814878308'));
     author.roles.add(interaction.guild.roles.cache.get('867514468099031130'));
     await sheetChannel.send(
-      `${author} your character has been **approved**, please type \`!beyond ${beyondLink}\``
+      `${author} your character has been **approved**, please type \`!import ${beyondLink}\`. Then go to #spam and type \`!start\``
     );
     await interaction.message.react('✅') // ':white_check_mark:'
     await interaction.message.edit({ components: [] })
     interaction.reply(
-      `Thanks for your hardwork ${staffMember}, character succesffuly approved.`
+      `Thanks for your hardwork ${staffMember}, character successfully approved.`
     );
   } else if (buttonId === 'reject') {
-    interaction.reply('Please enter your rejection rationale').then(() => {
+    interaction.reply('Please enter your rejection rationale').then(async () => {
       const filter = (m) => interaction.user.id === m.author.id;
 
-      interaction.channel
+      await interaction.channel
         .awaitMessages({ filter, time: 60000, max: 1, errors: ['time'] })
         .then(async (messages) => {
           const reasons = await messages.first().content;
@@ -75,19 +73,12 @@ client.on('interactionCreate', async (interaction) => {
           );
           await interaction.message.react('❌') // '\:x:'
           await interaction.message.edit({ components: [] })
-          interaction.followUp(`Thanks for your hardwork ${staffMember.displayName}, character succesffuly rejected.`);
+          await interaction.followUp(`Thanks for your hardwork ${staffMember.displayName}, character successfully rejected.`);
         })
         .catch(() => {
           interaction.followUp('You did not enter any input!');
         });
     });
-
-    author.send(
-      `I'm sorry but your character ${charName} (ID: ${subId}) has been rejected. Details: ${reasons}`
-    );
-    interaction.followUp(
-      `Thanks for your hardwork ${staffMember.displayName}, character succesffuly rejected.`
-    );
   }
 });
 client.on('interactionCreate', async (interaction) => {
@@ -105,4 +96,5 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-client.login(token);
+keepAlive();
+client.login(process.env['token']);
